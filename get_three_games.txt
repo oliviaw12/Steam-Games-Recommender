@@ -1,0 +1,78 @@
+    def three_games_other_players(self, user_games: list[Game, Game, Game]) -> list[Game, Game, Game]:
+        """Return three games using the score_by_other_players algorithm to predict what a user would like based on
+        their three inputted games. """
+        games_so_far = []
+        for game in user_games:
+            games_so_far += [self.score_by_other_players(game)]
+
+        games_so_far[1].update(games_so_far[2])
+        games_so_far[0].update(games_so_far[1])
+        sorted_games = dict(sorted(games_so_far[0].items(), key=lambda item: item[1]))
+        sorted_keys_list = list(sorted_games)
+
+        if len(sorted_keys_list) >= 3:
+            return sorted_keys_list[-3:]
+        else:
+            sorted_keys_list += self.generate_random_games(3 - len(sorted_keys_list))
+            return sorted_keys_list
+
+    def three_games_genre(self, liked_genres: list[str]) -> list[Game, Game, Game]:
+        """Return three games using the score_by_genre algorithm to predict what a user would like based on
+                their inputted genres they like. """
+        games_so_far = self.score_by_genre(liked_genres)
+
+        sorted_games = dict(sorted(games_so_far.items(), key=lambda item: item[1])) # error occurs when it is dict[Game, int]
+        sorted_keys_list = list(sorted_games)
+
+        if len(sorted_keys_list) >= 3:
+            return sorted_keys_list[-3:]
+        else:
+            sorted_keys_list += self.generate_random_games(3 - len(sorted_keys_list))
+            return sorted_keys_list
+
+    def three_games_players_and_genre(self, user_games: list, liked_genres: list):
+        """Return three games using the score_by_players_and_genre algorithm to predict what a user would like based on
+                their liked genres as well as the games they pick."""
+        games_so_far = []
+
+        for game in user_games:
+            score_by_other_players = self.score_by_other_players(game)
+            score_by_genre = self.score_by_genre(liked_genres)
+            if self.score_by_players_and_genre(score_by_other_players, score_by_genre) != {}:
+                games_so_far += [self.score_by_players_and_genre(score_by_other_players, score_by_genre)]
+            # if there are no common games between the 2 akgorithms, then we use our helper function that choses an
+            # algorithm at random and then takes game with highest score if it exists -- MAY RETURN {}, which is why we
+            # have call to generate_random_games at end
+            else:
+                games_so_far += self.generate_random_combined_games(score_by_other_players, score_by_genre,
+                                                                    games_so_far)
+
+        games_so_far[1].update(games_so_far[2])
+        games_so_far[0].update(games_so_far[1])
+
+        sorted_games = dict(sorted(games_so_far[0].items(), key=lambda item: item[1]))
+        sorted_keys_list = list(sorted_games)
+
+        if len(sorted_keys_list) >= 3:
+            return sorted_keys_list[-3:]
+        else:
+            sorted_keys_list += self.generate_random_games(3 - len(sorted_keys_list))
+            return sorted_keys_list
+
+    def get_three_games(self, user_games: list[Game, Game, Game], liked_genres: list, algorithm_type: str) \
+            -> list[Game, Game, Game]:
+        """ Our main calculation function.
+
+        Preconditions:
+        - algorithm_type in {'players', 'genre', 'players_genre'}
+
+        >>> game_ids = [id for id in graph.games]
+        >>> games_with_reviews = [graph.games[id] for id in game_ids if graph.games[id].reviewed_by != {}]
+        >>> graph.get_three_games([games_with_reviews[0], games_with_reviews[1], games_with_reviews[2]], ['Indie', 'Action', 'Adventure'], 'players_genre')
+        """
+        if algorithm_type == 'players':
+            return self.three_games_other_players(user_games)
+        elif algorithm_type == 'genre':
+            return self.three_games_genre(liked_genres)
+        else:
+            return self.three_games_players_and_genre(user_games, liked_genres)

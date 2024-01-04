@@ -1,0 +1,32 @@
+    def calculate_alg(self, p_input: list[Game, Game, Game], score_type: str) -> list[Game, Game, Game]:
+        """ Our main calculation function.
+
+        Preconditions:
+        - score_type in {'players', 'genre', 'players_genre'}
+
+        >>> game_ids = [id for id in graph.games]
+        >>> games_with_reviews = [graph.games[id] for id in game_ids if graph.games[id].reviewed_by != {}]
+        >>> graph.calculate_alg([games_with_reviews[0], games_with_reviews[1], games_with_reviews[2], 'players')
+        """
+        saved_recs = []
+        for game in p_input:
+            # score type is the type of algorithm used in recommending games
+            if score_type == 'players':
+                saved_recs.append(self.score_by_other_players(game))
+            if score_type == 'genre':
+                saved_recs.append(self.score_by_genre(game))
+            if score_type == 'players_genre':
+                saved_recs.append(self.score_by_players_genre(game))
+
+        # saved_recs = [{Game: int, ... Game: int}, {Game: int, ... Game: int}, {Game: int, ... Game: int}]
+        saved_recs[1].update(saved_recs[2])
+        saved_recs[0].update(saved_recs[1])
+
+        sorted_games = dict(sorted(saved_recs[0].items(), key=lambda item: item[1]))
+        sorted_keys_list = list(sorted_games)
+
+        if len(sorted_keys_list) >= 3:
+            return sorted_keys_list[-3:]
+        else:
+            sorted_keys_list += self.generate_random_games(3 - len(sorted_keys_list))
+            return sorted_keys_list

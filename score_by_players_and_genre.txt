@@ -1,0 +1,35 @@
+    def score_by_players_and_genre(self, score_by_other_players: dict, score_by_genre: dict) -> dict:
+        """Return a dictionary mapping the score of each game, where the score is calculated based on the number of
+        other players who liked the game as well as the genres the player likes.
+        >>> game_ids = [id for id in graph.games]
+        >>> with_reviews = [graph.games[id] for id in game_ids if graph.games[id].reviewed_by != {}]
+        >>> graph.score_by_players_and_genre(with_reviews[0], ['Indie', 'Action', 'Adventure'])
+        """
+        combined_game_scores = {}
+        for game in score_by_other_players:
+            if game in score_by_genre:
+                combined_game_scores[game] = score_by_other_players[game] + score_by_genre[game]
+        return combined_game_scores
+
+    def generate_random_combined_games(self, score_by_other_players: dict, score_by_genre: dict,
+                                       games_so_far: list) -> dict:
+        """Return a dictionary of length 1 mapping a Game object to its corresponding value. The key is
+        chosen at random between score_by_other_players and score_by_genre.
+        """
+        sorted_score_by_other_players = dict(sorted(score_by_other_players.items(), key=lambda item: item[1]))
+        sorted_score_by_genre = dict(sorted(score_by_genre.items(), key=lambda item: item[1]))
+
+        random_choice = random.choice(['players', 'genre'])
+
+        if random_choice == 'players':
+            score_as_list = list(sorted_score_by_other_players)
+            for i in range(1, len(score_by_other_players) + 1):
+                if score_as_list[-i] not in games_so_far:
+                    return {score_as_list[-i]: sorted_score_by_other_players[-i]}
+            return {}
+        else:
+            score_as_list = list(sorted_score_by_genre)
+            for i in range(1, len(score_by_genre) + 1):
+                if score_as_list[-i] not in games_so_far:
+                    return {score_as_list[-i]: sorted_score_by_genre[-i]}
+            return {}
